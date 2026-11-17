@@ -1,5 +1,7 @@
 # Silver Proposals — Backend
 
+[![CI](https://github.com/victorkauan/silver-proposals-backend/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/victorkauan/silver-proposals-backend/actions/workflows/ci.yml)
+
 REST API for **Silver Proposals**, an AI-powered SaaS for creating and managing commercial proposals.
 Built with FastAPI, SQLAlchemy 2, Alembic, and PostgreSQL. It ships as a container image to Amazon ECR.
 
@@ -74,6 +76,18 @@ uv run ruff check .
 uv run ruff format --check .
 uv run mypy
 ```
+
+## Continuous integration
+
+GitHub Actions runs on every pull request and on every push to `main`:
+
+| Workflow | Job | Checks |
+|---|---|---|
+| [CI](.github/workflows/ci.yml) | `quality` | ruff (lint and format), mypy, pytest with coverage (minimum 80%) |
+| | `build` | builds the container image |
+| [PR title](.github/workflows/pr-title.yml) | `pr-title` | Conventional Commits title ending with `[SIL-<n>]` |
+
+The coverage report is published in each run's summary.
 
 ## Container image
 

@@ -47,4 +47,4 @@ files = ["src", "tests", "migrations"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--import-mode=importlib --cov=app --cov-report=term-missing"
+addopts = "--import-mode=importlib --cov=app --cov-report=term-missing --cov-fail-under=80"
