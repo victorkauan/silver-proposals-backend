@@ -27,6 +27,18 @@ uv run uvicorn app.main:app --reload
 
 The API listens on <http://localhost:8000>. The interactive docs are at `/docs`, and the liveness probe is at `/health`.
 
+## Contributing
+
+Install the Git hooks before your first commit:
+
+```bash
+uv tool install pre-commit
+pre-commit install
+```
+
+Branch, commit, and pull request conventions are in [CONTRIBUTING.md](CONTRIBUTING.md).
+Security issues: see [SECURITY.md](SECURITY.md).
+
 ## Quality checks
 
 ```bash
