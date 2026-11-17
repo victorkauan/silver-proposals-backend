@@ -1,0 +1,33 @@
+name: silver-proposals
+
+services:
+  db:
+    image: postgres:17-alpine
+    # Local-only credentials; deployed environments read them from Secrets Manager.
+    environment:
+      POSTGRES_USER: silver
+      POSTGRES_PASSWORD: silver
+      POSTGRES_DB: silver_proposals
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U silver -d silver_proposals"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: .
+    environment:
+      ENVIRONMENT: local
+      DATABASE_URL: postgresql+psycopg://silver:silver@db:5432/silver_proposals
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:
