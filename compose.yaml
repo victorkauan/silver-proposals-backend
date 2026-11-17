@@ -23,6 +23,8 @@ services:
     environment:
       ENVIRONMENT: local
       DATABASE_URL: postgresql+psycopg://silver:silver@db:5432/silver_proposals
+      JWT_SECRET: local-only-jwt-secret-never-use-outside-compose
+      CORS_ORIGINS: '["http://localhost:5173"]'
     ports:
       - "8000:8000"
     depends_on:

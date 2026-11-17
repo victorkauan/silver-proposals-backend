@@ -6,9 +6,13 @@ readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "alembic>=1.14",
+    "argon2-cffi>=25.1.0",
     "fastapi>=0.115",
+    "limits>=5.8.0",
     "psycopg[binary]>=3.2",
     "pydantic-settings>=2.6",
+    "pydantic[email]>=2.14.3",
+    "pyjwt>=2.15.1",
     "sqlalchemy>=2.0",
     "uvicorn[standard]>=0.32",
 ]
@@ -39,12 +43,17 @@ src = ["src", "tests"]
 select = ["E", "W", "F", "I", "B", "UP", "SIM", "S", "N", "RUF"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101"]
+"tests/**" = ["S101", "S105", "S106"]
+# Error codes and the OAuth token type are identifiers, not credentials.
+"src/app/shared/errors.py" = ["S105"]
+"src/app/features/auth/schemas.py" = ["S105"]
 
 [tool.mypy]
 strict = true
 plugins = ["pydantic.mypy"]
 files = ["src", "tests", "migrations"]
+mypy_path = ["src"]
+explicit_package_bases = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
