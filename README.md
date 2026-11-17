@@ -33,7 +33,8 @@ PostgreSQL 17 on `localhost:5432`. Stop it with `docker compose down`, or add `-
 
 ### Day-to-day development (hot reload)
 
-Run only the database in Docker and the API on your machine:
+Run only the database in Docker and the API on your machine. Set a random `JWT_SECRET` in `.env`
+(see [configuration](docs/reference/configuration.md)):
 
 ```bash
 cp .env.example .env
@@ -44,7 +45,8 @@ uv run uvicorn app.main:app --reload
 
 ### Migrations
 
-Migrations never run automatically on startup. Apply them explicitly:
+Migrations never run automatically on startup. Apply them explicitly
+(creating migrations: [database migrations guide](docs/guides/database-migrations.md)):
 
 ```bash
 uv run alembic upgrade head                        # from your machine

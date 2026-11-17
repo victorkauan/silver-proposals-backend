@@ -1,18 +1,10 @@
-from collections.abc import Iterator
 from unittest.mock import MagicMock
 
-import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.exc import OperationalError
 
 from app.main import app
 from app.shared.db import get_session
-
-
-@pytest.fixture
-def client() -> Iterator[TestClient]:
-    yield TestClient(app)
-    app.dependency_overrides.clear()
 
 
 def override_session(session: MagicMock) -> None:

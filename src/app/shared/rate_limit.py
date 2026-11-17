@@ -1,0 +1,23 @@
+from collections.abc import Callable
+
+from fastapi import Request, status
+from limits import parse
+from limits.storage import MemoryStorage
+from limits.strategies import MovingWindowRateLimiter
+
+from app.shared.errors import AppError, ErrorCode
+
+# In-memory counters are per process: with several API tasks each one limits on its own.
+storage = MemoryStorage()
+limiter = MovingWindowRateLimiter(storage)
+
+
+def rate_limit(limit: str) -> Callable[[Request], None]:
+    item = parse(limit)
+
+    def dependency(request: Request) -> None:
+        client = request.client.host if request.client else "unknown"
+        if not limiter.hit(item, request.url.path, client):
+            raise AppError(ErrorCode.RATE_LIMITED, status.HTTP_429_TOO_MANY_REQUESTS)
+
+    return dependency

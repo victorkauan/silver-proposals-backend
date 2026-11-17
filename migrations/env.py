@@ -3,8 +3,8 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
+from app.models import Base
 from app.shared.config import get_settings
-from app.shared.db import Base
 
 config = context.config
 # ConfigParser treats "%" as interpolation; URL-encoded passwords contain it.
