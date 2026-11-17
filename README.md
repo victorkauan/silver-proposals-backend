@@ -27,7 +27,8 @@ Why three repositories: [ADR-0001](https://github.com/victorkauan/silver-proposa
 docker compose up --build
 ```
 
-The API listens on <http://localhost:8000> (interactive docs at `/docs`, liveness probe at `/health`), and
+The API listens on <http://localhost:8000> (interactive docs at `/docs`, probes at `/health` and `/ready`;
+see [health checks](docs/reference/health-checks.md)), and
 PostgreSQL 17 on `localhost:5432`. Stop it with `docker compose down`, or add `-v` to also drop the database volume.
 
 ### Day-to-day development (hot reload)
@@ -70,8 +71,11 @@ Security issues: see [SECURITY.md](SECURITY.md).
 
 ## Quality checks
 
+Integration tests (`-m integration`) start PostgreSQL in Docker through Testcontainers, so Docker must be running.
+
 ```bash
-uv run pytest
+uv run pytest                    # all tests
+uv run pytest -m "not integration"   # unit tests only, no Docker
 uv run ruff check .
 uv run ruff format --check .
 uv run mypy
@@ -83,7 +87,7 @@ GitHub Actions runs on every pull request and on every push to `main`:
 
 | Workflow | Job | Checks |
 |---|---|---|
-| [CI](.github/workflows/ci.yml) | `quality` | ruff (lint and format), mypy, pytest with coverage (minimum 80%) |
+| [CI](.github/workflows/ci.yml) | `quality` | ruff (lint and format), mypy, pytest with coverage (minimum 80%), including integration tests against PostgreSQL via Testcontainers |
 | | `build` | builds the container image |
 | [PR title](.github/workflows/pr-title.yml) | `pr-title` | Conventional Commits title ending with `[SIL-<n>]` |
 
