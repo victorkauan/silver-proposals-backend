@@ -15,17 +15,44 @@ Why three repositories: [ADR-0001](https://github.com/victorkauan/silver-proposa
 
 - Python 3.12
 - [uv](https://docs.astral.sh/uv/)
-- Docker (for the container image)
+- Docker with Compose (local database and container image)
 
-## Quick start
+## Local environment
+
+### Full stack (API + PostgreSQL)
+
+```bash
+docker compose up --build
+```
+
+The API listens on <http://localhost:8000> (interactive docs at `/docs`, liveness probe at `/health`), and
+PostgreSQL 17 on `localhost:5432`. Stop it with `docker compose down`, or add `-v` to also drop the database volume.
+
+### Day-to-day development (hot reload)
+
+Run only the database in Docker and the API on your machine:
 
 ```bash
 cp .env.example .env
 uv sync
+docker compose up -d db
 uv run uvicorn app.main:app --reload
 ```
 
-The API listens on <http://localhost:8000>. The interactive docs are at `/docs`, and the liveness probe is at `/health`.
+### Migrations
+
+Migrations never run automatically on startup. Apply them explicitly:
+
+```bash
+uv run alembic upgrade head                        # from your machine
+docker compose run --rm api alembic upgrade head   # inside the stack
+```
+
+### With the frontend
+
+Start the API with either option above, then follow the frontend's
+[local setup](https://github.com/victorkauan/silver-proposals-frontend#with-the-local-api) with
+`VITE_API_BASE_URL=http://localhost:8000`.
 
 ## Contributing
 
