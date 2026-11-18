@@ -17,4 +17,6 @@ Settings are read from environment variables, or from `.env` in local developmen
 | `BEDROCK_READ_TIMEOUT_SECONDS` | no | `120` | Read timeout for the streaming connection |
 | `GENERATION_MAX_TOKENS` | no | `4096` | Output token limit for each generation |
 
+Tracing is configured with the standard OpenTelemetry variables (`OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_SERVICE_NAME`); see [Observability](observability.md).
+
 The application fails at startup when a required variable is missing or invalid.

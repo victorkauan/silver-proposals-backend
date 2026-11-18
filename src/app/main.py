@@ -10,6 +10,7 @@ from app.features.versions.router import router as versions_router
 from app.shared.config import get_settings
 from app.shared.errors import register_error_handlers
 from app.shared.logging import configure_logging
+from app.shared.observability import RequestLogMiddleware, setup_tracing
 
 
 def create_app() -> FastAPI:
@@ -30,6 +31,9 @@ def create_app() -> FastAPI:
     app.include_router(generation_router)
     app.include_router(versions_router)
     app.include_router(sharing_router)
+    # Added last so it wraps everything, including CORS and error handlers.
+    app.add_middleware(RequestLogMiddleware)
+    setup_tracing(app, settings.environment)
     return app
 
 

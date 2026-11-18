@@ -32,5 +32,6 @@ shared proposals. To share again, create a new link.
 ## Token and logs
 
 Tokens are 32 random bytes (URL-safe base64, about 43 characters), so guessing one is not feasible. Because the token is
-part of the URL, it can appear in web server and load balancer access logs. Restrict access to those logs, and keep
-expirations short.
+part of the URL, it could appear in access logs. The API never logs it: request logs use the route template, and
+Uvicorn's access log is off. Load balancer access logs are disabled; if they are ever turned on, restrict access to
+them. Keep expirations short.
