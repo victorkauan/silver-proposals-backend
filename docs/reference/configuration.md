@@ -11,6 +11,7 @@ Settings are read from environment variables, or from `.env` in local developmen
 | `REFRESH_TOKEN_TTL_DAYS` | no | `7` | Refresh token lifetime |
 | `CORS_ORIGINS` | no | `[]` | JSON list of origins allowed to call the API with credentials, for example `["http://localhost:5173"]` |
 | `AI_PROVIDER` | no | `fake` | `fake` (no network) or `bedrock` |
+| `FAKE_PROVIDER_DELAY_MS` | no | `0` | Pause before each word of the fake provider's stream, 0 to 1000. Use it locally to watch the generation UI; keep `0` in tests and CI |
 | `BEDROCK_MODEL_ID` | no | `us.amazon.nova-2-lite-v1:0` | Bedrock model or inference profile ID. Amazon Nova models (for example `us.amazon.nova-pro-v1:0`, `us.amazon.nova-premier-v1:0`) are billed as Amazon Bedrock usage |
 | `BEDROCK_REGION` | no | `us-east-1` | Region of the Bedrock runtime endpoint |
 | `BEDROCK_READ_TIMEOUT_SECONDS` | no | `120` | Read timeout for the streaming connection |

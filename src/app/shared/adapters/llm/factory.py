@@ -15,4 +15,4 @@ def get_llm_provider() -> LLMProvider:
             settings.bedrock_region,
             settings.bedrock_read_timeout_seconds,
         )
-    return FakeProvider()
+    return FakeProvider(settings.fake_provider_delay_ms)

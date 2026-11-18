@@ -50,7 +50,7 @@ If a model wraps the whole document in a code fence (```), the fence is removed 
 
 | `AI_PROVIDER` | Use |
 |---|---|
-| `fake` (default) | Local development and CI. Returns a fixed Markdown document with no network calls. |
+| `fake` (default) | Local development and CI. Streams a fixed Markdown proposal word by word, with no network calls. `FAKE_PROVIDER_DELAY_MS` slows it down so the generation UI can be watched. |
 | `bedrock` | Amazon Bedrock Converse streaming API, with the model from `BEDROCK_MODEL_ID`. |
 
 Every request sets `maxTokens` (`GENERATION_MAX_TOKENS`, default 4096). Clients use adaptive retries and a read timeout

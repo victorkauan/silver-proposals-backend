@@ -26,6 +26,7 @@ services:
       JWT_SECRET: local-only-jwt-secret-never-use-outside-compose
       CORS_ORIGINS: '["http://localhost:5173"]'
       AI_PROVIDER: fake
+      FAKE_PROVIDER_DELAY_MS: ${FAKE_PROVIDER_DELAY_MS:-0}
     ports:
       - "8000:8000"
     depends_on:

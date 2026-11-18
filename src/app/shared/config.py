@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     refresh_token_ttl_days: int = 7
     cors_origins: list[str] = []
     ai_provider: Literal["fake", "bedrock"] = "fake"
+    fake_provider_delay_ms: int = Field(default=0, ge=0, le=1000)
     bedrock_model_id: str = "us.amazon.nova-2-lite-v1:0"
     bedrock_region: str = "us-east-1"
     bedrock_read_timeout_seconds: int = 120
