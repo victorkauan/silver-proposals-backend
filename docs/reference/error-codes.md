@@ -21,6 +21,7 @@ Clients should branch on `code`, never on `message`.
 | `briefing_required` | 422 | Preencha o briefing antes de gerar a proposta. |
 | `version_conflict` | 409 | A proposta foi alterada por outra pessoa. Recarregue para ver a versão mais recente. |
 | `version_not_found` | 404 | Versão não encontrada. |
+| `share_link_not_found` | 404 | Link inválido ou expirado. |
 | `generation_unavailable` | stream `error` | O serviço de IA está ocupado. Tente novamente em instantes. |
 | `generation_timeout` | stream `error` | A geração demorou demais. Tente novamente. |
 | `generation_failed` | stream `error` | Não foi possível gerar a proposta. Tente novamente. |
