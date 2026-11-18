@@ -1,0 +1,36 @@
+# Public share links
+
+The owner of a proposal can create links that show it to anyone, without an account, until the link expires or is
+revoked.
+
+## Managing links (owner only)
+
+| Method and path | Success |
+|---|---|
+| `POST /proposals/{id}/share-links` `{ "expires_in_days": 7 }` | `201` link **including `token`**; 1 to 90 days, default 7 |
+| `GET /proposals/{id}/share-links` | `200` list with `id`, `expires_at`, `revoked_at`, `created_at`, `active` |
+| `DELETE /proposals/{id}/share-links/{link_id}` | `204`; the link stops working immediately |
+
+Editors and viewers get `403 forbidden`, and non-members get `404 proposal_not_found`. The **token is returned only once**,
+when the link is created: the database stores only its SHA-256 hash, so a leaked database cannot be used to read
+shared proposals. To share again, create a new link.
+
+## Reading a shared proposal (public)
+
+`GET /public/proposals/{token}`: no authentication, rate limited to 60 requests per minute per IP.
+
+```json
+{ "title": "...", "client_name": "...", "content": "# Proposta...", "updated_at": "..." }
+```
+
+- Only these four fields are returned: no briefing, IDs, members, or versions.
+- `content` is the proposal's current content, so later edits appear on the link.
+- Unknown, expired, revoked, and archived links all answer the same `404 share_link_not_found`
+  ("Link inválido ou expirado."), so a request never reveals whether a link existed.
+- Responses carry `Cache-Control: no-store` and `X-Robots-Tag: noindex`.
+
+## Token and logs
+
+Tokens are 32 random bytes (URL-safe base64, about 43 characters), so guessing one is not feasible. Because the token is
+part of the URL, it can appear in web server and load balancer access logs. Restrict access to those logs, and keep
+expirations short.
