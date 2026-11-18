@@ -14,6 +14,8 @@ class ErrorCode(StrEnum):
     INVALID_REFRESH_TOKEN = "invalid_refresh_token"
     EMAIL_TAKEN = "email_taken"
     RATE_LIMITED = "rate_limited"
+    FORBIDDEN = "forbidden"
+    PROPOSAL_NOT_FOUND = "proposal_not_found"
 
 
 MESSAGES: dict[ErrorCode, str] = {
@@ -24,6 +26,8 @@ MESSAGES: dict[ErrorCode, str] = {
     ErrorCode.INVALID_REFRESH_TOKEN: "Sua sessão expirou. Faça login novamente.",
     ErrorCode.EMAIL_TAKEN: "Já existe uma conta com este e-mail.",
     ErrorCode.RATE_LIMITED: "Muitas tentativas. Aguarde um instante e tente novamente.",
+    ErrorCode.FORBIDDEN: "Você não tem permissão para esta ação.",
+    ErrorCode.PROPOSAL_NOT_FOUND: "Proposta não encontrada.",
 }
 
 

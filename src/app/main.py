@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.features.auth.router import router as auth_router
 from app.features.health.router import router as health_router
+from app.features.proposals.router import router as proposals_router
 from app.shared.config import get_settings
 from app.shared.errors import register_error_handlers
 
@@ -20,6 +21,7 @@ def create_app() -> FastAPI:
     register_error_handlers(app)
     app.include_router(health_router)
     app.include_router(auth_router)
+    app.include_router(proposals_router)
     return app
 
 

@@ -16,6 +16,8 @@ Clients should branch on `code`, never on `message`.
 | `invalid_refresh_token` | 401 | Sua sessão expirou. Faça login novamente. |
 | `email_taken` | 409 | Já existe uma conta com este e-mail. |
 | `rate_limited` | 429 | Muitas tentativas. Aguarde um instante e tente novamente. |
+| `forbidden` | 403 | Você não tem permissão para esta ação. |
+| `proposal_not_found` | 404 | Proposta não encontrada. |
 
 `validation_error` also carries `details`, a list of `{ "field": "<name>", "type": "<pydantic error type>" }` entries,
 for example `{ "field": "password", "type": "string_too_short" }`. The catalog lives in `src/app/shared/errors.py`.

@@ -1,5 +1,7 @@
 import os
-from collections.abc import Iterator
+import uuid
+from collections.abc import Callable, Iterator
+from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
@@ -12,6 +14,8 @@ from testcontainers.community.postgres import PostgresContainer
 os.environ.setdefault("DATABASE_URL", "postgresql+psycopg://unused:unused@localhost:1/unused")
 os.environ.setdefault("JWT_SECRET", "test-only-secret-with-at-least-32-characters")
 
+from app.features.auth.models import User
+from app.features.auth.security import create_access_token
 from app.main import app
 from app.shared.config import get_settings
 from app.shared.db import get_engine, get_session_factory
@@ -50,10 +54,31 @@ def migrated_database() -> Iterator[str]:
 def database(migrated_database: str) -> Iterator[str]:
     yield migrated_database
     with get_engine().begin() as connection:
-        connection.execute(text("TRUNCATE users, refresh_tokens CASCADE"))
+        connection.execute(
+            text("TRUNCATE users, refresh_tokens, proposals, proposal_members CASCADE")
+        )
 
 
 @pytest.fixture
 def client() -> Iterator[TestClient]:
     yield TestClient(app, base_url="https://testserver")
     app.dependency_overrides.clear()
+
+
+@dataclass(frozen=True)
+class AuthenticatedUser:
+    id: uuid.UUID
+    headers: dict[str, str]
+
+
+@pytest.fixture
+def make_user(database: str) -> Callable[[str], AuthenticatedUser]:
+    def factory(name: str) -> AuthenticatedUser:
+        with get_session_factory()() as session:
+            user = User(email=f"{name}@example.com", name=name, password_hash="not-used")
+            session.add(user)
+            session.commit()
+            token = create_access_token(user.id)
+            return AuthenticatedUser(user.id, {"Authorization": f"Bearer {token}"})
+
+    return factory
