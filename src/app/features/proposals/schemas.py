@@ -4,7 +4,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, StringConstraints
 
-from app.features.proposals.models import ProposalRole
+from app.features.proposals.models import Proposal, ProposalRole
 
 Title = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 Briefing = Annotated[str, StringConstraints(strip_whitespace=True, max_length=10_000)]
@@ -35,9 +35,25 @@ class ProposalSummary(BaseModel):
 class ProposalDetail(ProposalSummary):
     briefing: str
     content: str
+    version: int
     created_at: datetime
 
 
 class ProposalPage(BaseModel):
     items: list[ProposalSummary]
     total: int
+
+
+def to_detail(proposal: Proposal, role: ProposalRole) -> ProposalDetail:
+    return ProposalDetail(
+        id=proposal.id,
+        title=proposal.title,
+        client_name=proposal.client_name,
+        role=role,
+        archived_at=proposal.archived_at,
+        updated_at=proposal.updated_at,
+        briefing=proposal.briefing,
+        content=proposal.content,
+        version=proposal.version,
+        created_at=proposal.created_at,
+    )

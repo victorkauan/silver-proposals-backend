@@ -39,9 +39,10 @@ The list returns archived proposals only when `archived=true`. `limit` accepts 1
 | `client_name` | string | 1–200 characters, trimmed |
 | `briefing` | string | up to 10,000 characters; input for AI generation |
 | `content` | string | Markdown document, empty until generated or edited |
+| `version` | integer | number of the latest content version; 0 before any content |
 | `role` | `owner`, `editor`, `viewer` | the caller's role on this proposal |
 | `archived_at` | datetime or null | |
 | `created_at`, `updated_at` | datetime | |
 
 The list returns a summary without `briefing`, `content`, and `created_at`. `content` cannot be changed through
-`PATCH`; it is written by dedicated endpoints that keep a version history.
+`PATCH`; it changes only through [content and versions](versions.md) and AI generation.

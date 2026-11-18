@@ -20,6 +20,8 @@ class ErrorCode(StrEnum):
     GENERATION_UNAVAILABLE = "generation_unavailable"
     GENERATION_TIMEOUT = "generation_timeout"
     GENERATION_FAILED = "generation_failed"
+    VERSION_CONFLICT = "version_conflict"
+    VERSION_NOT_FOUND = "version_not_found"
 
 
 MESSAGES: dict[ErrorCode, str] = {
@@ -36,6 +38,10 @@ MESSAGES: dict[ErrorCode, str] = {
     ErrorCode.GENERATION_UNAVAILABLE: "O serviço de IA está ocupado. Tente novamente em instantes.",
     ErrorCode.GENERATION_TIMEOUT: "A geração demorou demais. Tente novamente.",
     ErrorCode.GENERATION_FAILED: "Não foi possível gerar a proposta. Tente novamente.",
+    ErrorCode.VERSION_CONFLICT: (
+        "A proposta foi alterada por outra pessoa. Recarregue para ver a versão mais recente."
+    ),
+    ErrorCode.VERSION_NOT_FOUND: "Versão não encontrada.",
 }
 
 

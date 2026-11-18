@@ -55,7 +55,10 @@ def database(migrated_database: str) -> Iterator[str]:
     yield migrated_database
     with get_engine().begin() as connection:
         connection.execute(
-            text("TRUNCATE users, refresh_tokens, proposals, proposal_members CASCADE")
+            text(
+                "TRUNCATE users, refresh_tokens, proposals, proposal_members, proposal_versions"
+                " CASCADE"
+            )
         )
 
 

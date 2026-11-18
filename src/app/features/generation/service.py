@@ -5,7 +5,9 @@ import uuid
 from collections.abc import Iterator
 from typing import Any
 
-from app.features.proposals.models import Proposal
+from app.features.proposals.models import VersionSource
+from app.features.versions.repository import lock_proposal
+from app.features.versions.service import record_version
 from app.shared.adapters.llm.base import (
     GenerationRequest,
     LLMError,
@@ -41,7 +43,10 @@ def _error_code(exc: LLMError) -> ErrorCode:
 
 
 def stream_generation(
-    provider: LLMProvider, request: GenerationRequest, proposal_id: uuid.UUID
+    provider: LLMProvider,
+    request: GenerationRequest,
+    proposal_id: uuid.UUID,
+    author_id: uuid.UUID,
 ) -> Iterator[str]:
     started = time.monotonic()
     parts: list[str] = []
@@ -76,12 +81,13 @@ def stream_generation(
         return
 
     with get_session_factory()() as session:
-        proposal = session.get(Proposal, proposal_id)
+        proposal = lock_proposal(session, proposal_id)
         if proposal is None:
             yield _event("error", error_body(ErrorCode.PROPOSAL_NOT_FOUND))
             return
-        proposal.content = content
+        record_version(session, proposal, content, VersionSource.GENERATED, author_id)
         session.commit()
+        version = proposal.version
 
     logger.info(
         "generation_completed",
@@ -93,4 +99,4 @@ def stream_generation(
             "content_chars": len(content),
         },
     )
-    yield _event("done", {"proposal_id": str(proposal_id)})
+    yield _event("done", {"proposal_id": str(proposal_id), "version": version})

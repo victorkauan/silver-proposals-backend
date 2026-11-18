@@ -5,6 +5,7 @@ from app.features.auth.router import router as auth_router
 from app.features.generation.router import router as generation_router
 from app.features.health.router import router as health_router
 from app.features.proposals.router import router as proposals_router
+from app.features.versions.router import router as versions_router
 from app.shared.config import get_settings
 from app.shared.errors import register_error_handlers
 from app.shared.logging import configure_logging
@@ -26,6 +27,7 @@ def create_app() -> FastAPI:
     app.include_router(auth_router)
     app.include_router(proposals_router)
     app.include_router(generation_router)
+    app.include_router(versions_router)
     return app
 
 
