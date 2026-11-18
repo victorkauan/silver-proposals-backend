@@ -1,0 +1,138 @@
+name: Deploy environment
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: GitHub environment (staging or prod).
+        required: true
+        type: string
+      build:
+        description: Build and push the image (only staging builds; prod promotes it).
+        required: true
+        type: boolean
+      commit:
+        description: Commit whose image is deployed; the image tag is this SHA.
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: deploy (${{ inputs.environment }})
+    runs-on: ubuntu-24.04
+    # The environment holds the approval rule (prod needs a reviewer) and the variables, and it is the
+    # only OIDC subject the deploy role trusts.
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ vars.API_URL }}
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      IMAGE: ${{ vars.ECR_REPOSITORY_URL }}:${{ inputs.commit }}
+      CLUSTER: ${{ vars.ECS_CLUSTER }}
+      SERVICE: ${{ vars.ECS_SERVICE }}
+      FAMILY: ${{ vars.ECS_TASK_DEFINITION_FAMILY }}
+    steps:
+      - name: Check configuration
+        env:
+          ROLE: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+        run: |
+          if [ -z "$ROLE" ] || [ -z "${{ vars.ECR_REPOSITORY_URL }}" ]; then
+            echo "::error::The ${{ inputs.environment }} environment has no deploy variables yet. Publish them from the infra repository (scripts/publish-outputs.sh)."
+            exit 1
+          fi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.commit }}
+          persist-credentials: false
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          role-session-name: deploy-backend-${{ inputs.environment }}-${{ github.run_id }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Log in to ECR
+        run: |
+          aws ecr get-login-password | docker login --username AWS --password-stdin "${IMAGE%%/*}"
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+        if: inputs.build
+
+      - name: Build and push the image
+        if: inputs.build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          push: true
+          tags: ${{ env.IMAGE }}
+          provenance: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Check that the image exists
+        run: aws ecr describe-images --repository-name "$(echo "${IMAGE%:*}" | cut -d/ -f2-)" --image-ids imageTag="${{ inputs.commit }}" >/dev/null
+
+      # The new revision starts from the latest one, so Terraform's configuration (environment,
+      # secrets, roles) is kept and only the image changes.
+      - name: Register the task definition
+        id: taskdef
+        run: |
+          aws ecs describe-task-definition --task-definition "$FAMILY" --query taskDefinition > current.json
+          jq --arg image "$IMAGE" '
+            .containerDefinitions |= map(if .name == "api" then .image = $image else . end)
+            | del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities,
+                  .registeredAt, .registeredBy, .deregisteredAt)' current.json > next.json
+          arn=$(aws ecs register-task-definition --cli-input-json file://next.json \
+            --query taskDefinition.taskDefinitionArn --output text)
+          echo "arn=$arn" >> "$GITHUB_OUTPUT"
+          echo "Registered $arn with $IMAGE"
+
+      - name: Run database migrations
+        env:
+          TASK_DEFINITION: ${{ steps.taskdef.outputs.arn }}
+          SUBNETS: ${{ vars.ECS_SUBNETS }}
+          SECURITY_GROUP: ${{ vars.ECS_SECURITY_GROUP }}
+        run: |
+          task=$(aws ecs run-task --cluster "$CLUSTER" --task-definition "$TASK_DEFINITION" --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[$SUBNETS],securityGroups=[$SECURITY_GROUP],assignPublicIp=ENABLED}" \
+            --overrides '{"containerOverrides":[{"name":"api","command":["alembic","upgrade","head"]}]}' \
+            --query 'tasks[0].taskArn' --output text)
+          echo "Migrations task: $task"
+          aws ecs wait tasks-stopped --cluster "$CLUSTER" --tasks "$task"
+          code=$(aws ecs describe-tasks --cluster "$CLUSTER" --tasks "$task" --query 'tasks[0].containers[0].exitCode' --output text)
+          echo "Migrations exit code: $code"
+          [ "$code" = "0" ]
+
+      - name: Roll out the service
+        env:
+          TASK_DEFINITION: ${{ steps.taskdef.outputs.arn }}
+        run: |
+          aws ecs update-service --cluster "$CLUSTER" --service "$SERVICE" \
+            --task-definition "$TASK_DEFINITION" --desired-count 1 >/dev/null
+          aws ecs wait services-stable --cluster "$CLUSTER" --services "$SERVICE"
+
+      - name: Smoke test
+        env:
+          API_URL: ${{ vars.API_URL }}
+        run: |
+          for _ in $(seq 1 10); do
+            if curl -fsS "$API_URL/ready"; then echo; exit 0; fi
+            sleep 6
+          done
+          exit 1
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Backend deploy: \`${{ inputs.environment }}\`"
+            echo "- Image: \`${IMAGE##*/}\`"
+            echo "- Task definition: \`${{ steps.taskdef.outputs.arn }}\`"
+            echo "- URL: ${{ vars.API_URL }}"
+          } >> "$GITHUB_STEP_SUMMARY"

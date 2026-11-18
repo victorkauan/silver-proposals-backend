@@ -1,0 +1,41 @@
+name: Deploy
+
+# Runs after CI passes on main: build the image once, deploy it to staging, then promote the same
+# image to production after approval. Environment variables come from the infra repository's
+# Terraform outputs (published to the GitHub environments staging and prod).
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  staging:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/deploy-environment.yml
+    with:
+      environment: staging
+      build: true
+      commit: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+  prod:
+    needs: staging
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/deploy-environment.yml
+    with:
+      environment: prod
+      build: false
+      commit: ${{ github.event.workflow_run.head_sha || github.sha }}

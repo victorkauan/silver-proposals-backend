@@ -90,10 +90,26 @@ GitHub Actions runs on every pull request and on every push to `main`:
 | Workflow | Job | Checks |
 |---|---|---|
 | [CI](.github/workflows/ci.yml) | `quality` | ruff (lint and format), mypy, pytest with coverage (minimum 80%), including integration tests against PostgreSQL via Testcontainers |
-| | `build` | builds the container image |
+| | `security` | Semgrep and Bandit (SAST), pip-audit (SCA: any known vulnerability fails), gitleaks over the full history |
+| | `build` | builds the container image and scans it with Trivy (CRITICAL vulnerabilities with a fix fail) |
 | [PR title](.github/workflows/pr-title.yml) | `pr-title` | Conventional Commits title ending with `[SIL-<n>]` |
 
 The coverage report is published in each run's summary.
+
+## Deployment
+
+[Deploy](.github/workflows/deploy.yml) runs after CI passes on `main`:
+
+1. **staging (automatic):** builds the image once and pushes it to ECR tagged with the commit SHA, registers a new
+   task definition revision from the latest one with that image, runs `alembic upgrade head` as a one-off task (the
+   deploy stops if it fails), rolls out the ECS service, and checks `/ready`.
+2. **prod (after approval in the `prod` GitHub environment):** the same steps with the **same image**; production
+   never builds and its role cannot push images.
+
+Each job assumes the environment's deploy role through **GitHub OIDC** (no AWS keys). The GitHub environment
+variables come from the infra repository's Terraform outputs
+([outputs contract](https://github.com/victorkauan/silver-proposals-infra/blob/main/docs/reference/outputs-contract.md)).
+Terraform creates the service and its baseline task definition; image rollouts belong to this workflow.
 
 ## Container image
 
