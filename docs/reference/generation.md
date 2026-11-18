@@ -44,6 +44,8 @@ The system prompt (`src/app/features/generation/system_prompt.md`) asks for a pt
 briefing is escaped and wrapped in `<briefing>` tags, and the model is told to treat it as data only. The prompt is never
 returned by the API or written to logs.
 
+If a model wraps the whole document in a code fence (```), the fence is removed before saving.
+
 ## Providers
 
 | `AI_PROVIDER` | Use |
