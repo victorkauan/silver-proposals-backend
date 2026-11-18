@@ -18,6 +18,10 @@ Clients should branch on `code`, never on `message`.
 | `rate_limited` | 429 | Muitas tentativas. Aguarde um instante e tente novamente. |
 | `forbidden` | 403 | Você não tem permissão para esta ação. |
 | `proposal_not_found` | 404 | Proposta não encontrada. |
+| `briefing_required` | 422 | Preencha o briefing antes de gerar a proposta. |
+| `generation_unavailable` | stream `error` | O serviço de IA está ocupado. Tente novamente em instantes. |
+| `generation_timeout` | stream `error` | A geração demorou demais. Tente novamente. |
+| `generation_failed` | stream `error` | Não foi possível gerar a proposta. Tente novamente. |
 
 `validation_error` also carries `details`, a list of `{ "field": "<name>", "type": "<pydantic error type>" }` entries,
 for example `{ "field": "password", "type": "string_too_short" }`. The catalog lives in `src/app/shared/errors.py`.
