@@ -13,6 +13,7 @@ from app.features.proposals.schemas import (
     ProposalPage,
     ProposalSummary,
     ProposalUpdate,
+    to_detail,
 )
 from app.shared.db import get_session
 
@@ -22,18 +23,7 @@ DbSession = Annotated[Session, Depends(get_session)]
 
 
 def _detail(access: service.Access) -> ProposalDetail:
-    proposal = access.proposal
-    return ProposalDetail(
-        id=proposal.id,
-        title=proposal.title,
-        client_name=proposal.client_name,
-        role=access.role,
-        archived_at=proposal.archived_at,
-        updated_at=proposal.updated_at,
-        briefing=proposal.briefing,
-        content=proposal.content,
-        created_at=proposal.created_at,
-    )
+    return to_detail(access.proposal, access.role)
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, summary="Create a proposal")

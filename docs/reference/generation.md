@@ -20,13 +20,13 @@ event: delta
 data: {"text": "## Resumo\n"}
 
 event: done
-data: {"proposal_id": "<uuid>"}
+data: {"proposal_id": "<uuid>", "version": 4}
 ```
 
 | Event | Data | Meaning |
 |---|---|---|
 | `delta` | `{"text": "..."}` | Next piece of Markdown. Append it in order. |
-| `done` | `{"proposal_id": "..."}` | Generation finished and `content` was saved. |
+| `done` | `{"proposal_id": "...", "version": n}` | Generation finished, and `content` was saved as a new version with source `generated`. |
 | `error` | `{"code": "...", "message": "..."}` | Generation stopped. The previous `content` is unchanged. |
 
 | Error code | Cause |

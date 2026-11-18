@@ -76,11 +76,16 @@ def test_generation_streams_and_saves_the_content(client: TestClient, make_user:
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/event-stream")
     stream = events(response.text)
-    assert stream[-1] == ("done", {"proposal_id": proposal_id})
+    assert stream[-1] == ("done", {"proposal_id": proposal_id, "version": 1})
     streamed = "".join(data["text"] for name, data in stream if name == "delta")
     assert streamed == FAKE_PROPOSAL
     saved = client.get(f"/proposals/{proposal_id}", headers=owner.headers).json()
     assert saved["content"] == FAKE_PROPOSAL.strip()
+    assert saved["version"] == 1
+    history = client.get(f"/proposals/{proposal_id}/versions", headers=owner.headers).json()
+    assert [(item["number"], item["source"], item["author_name"]) for item in history["items"]] == [
+        (1, "generated", "owner")
+    ]
 
 
 def test_editor_can_generate_and_viewer_cannot(client: TestClient, make_user: MakeUser) -> None:

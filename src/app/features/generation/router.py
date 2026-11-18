@@ -43,7 +43,7 @@ def generate(
         get_settings().generation_max_tokens,
     )
     return StreamingResponse(
-        stream_generation(provider, request, proposal_id),
+        stream_generation(provider, request, proposal_id, user.id),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
