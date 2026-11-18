@@ -16,6 +16,10 @@ class ErrorCode(StrEnum):
     RATE_LIMITED = "rate_limited"
     FORBIDDEN = "forbidden"
     PROPOSAL_NOT_FOUND = "proposal_not_found"
+    BRIEFING_REQUIRED = "briefing_required"
+    GENERATION_UNAVAILABLE = "generation_unavailable"
+    GENERATION_TIMEOUT = "generation_timeout"
+    GENERATION_FAILED = "generation_failed"
 
 
 MESSAGES: dict[ErrorCode, str] = {
@@ -28,6 +32,10 @@ MESSAGES: dict[ErrorCode, str] = {
     ErrorCode.RATE_LIMITED: "Muitas tentativas. Aguarde um instante e tente novamente.",
     ErrorCode.FORBIDDEN: "Você não tem permissão para esta ação.",
     ErrorCode.PROPOSAL_NOT_FOUND: "Proposta não encontrada.",
+    ErrorCode.BRIEFING_REQUIRED: "Preencha o briefing antes de gerar a proposta.",
+    ErrorCode.GENERATION_UNAVAILABLE: "O serviço de IA está ocupado. Tente novamente em instantes.",
+    ErrorCode.GENERATION_TIMEOUT: "A geração demorou demais. Tente novamente.",
+    ErrorCode.GENERATION_FAILED: "Não foi possível gerar a proposta. Tente novamente.",
 }
 
 

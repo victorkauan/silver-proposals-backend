@@ -14,6 +14,11 @@ class Settings(BaseSettings):
     access_token_ttl_minutes: int = 15
     refresh_token_ttl_days: int = 7
     cors_origins: list[str] = []
+    ai_provider: Literal["fake", "bedrock"] = "fake"
+    bedrock_model_id: str = "us.amazon.nova-2-lite-v1:0"
+    bedrock_region: str = "us-east-1"
+    bedrock_read_timeout_seconds: int = 120
+    generation_max_tokens: int = 4096
 
 
 @lru_cache
