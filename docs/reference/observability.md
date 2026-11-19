@@ -43,4 +43,5 @@ same task receives them and sends them to AWS X-Ray. Without the variable, traci
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | `http://localhost:4318` | collector endpoint; enables tracing |
 | `OTEL_SERVICE_NAME` | `silver-proposals-api-staging` | service name in X-Ray (default `silver-proposals-api`) |
 
-Health checks are excluded from traces.
+Health checks are excluded from traces. Span URLs show `/public/proposals/{token}` instead of the share token,
+because X-Ray stores the URL of every request.

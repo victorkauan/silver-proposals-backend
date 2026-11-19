@@ -134,7 +134,7 @@ def test_tracing_exports_request_spans_with_xray_ids() -> None:
     app = build_app()
 
     assert setup_tracing(app, "staging", exporter=exporter) is True
-    TestClient(app).get("/public/proposals/abc")
+    TestClient(app).get("/public/proposals/secret-share-token?x=1")
     from opentelemetry import trace
 
     trace.get_tracer_provider().force_flush()  # type: ignore[attr-defined]
@@ -145,5 +145,8 @@ def test_tracing_exports_request_spans_with_xray_ids() -> None:
     assert server[0].attributes is not None
     assert server[0].attributes.get("http.route") == "/public/proposals/{token}"
     assert server[0].resource.attributes["deployment.environment"] == "staging"
+    exported = json.dumps([dict(s.attributes or {}) | {"name": s.name} for s in spans])
+    assert "secret-share-token" not in exported
+    assert "/public/proposals/{token}" in exported
     # X-Ray trace IDs start with the epoch seconds of the trace.
     assert f"{server[0].context.trace_id:032x}"[:8] != "00000000"
