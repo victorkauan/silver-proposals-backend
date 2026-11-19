@@ -25,6 +25,8 @@ REQUEST_ID_HEADER = "x-request-id"
 _VALID_REQUEST_ID = re.compile(r"^[A-Za-z0-9._-]{8,64}$")
 # Load balancer and container health checks would flood the logs and traces.
 _QUIET_PATHS = {"/health", "/ready"}
+_SHARE_TOKEN_IN_PATH = re.compile(r"(/public/proposals/)[^/?#]+")
+_URL_ATTRIBUTES = ("http.url", "http.target", "url.full", "url.path")
 
 logger = logging.getLogger("app.request")
 
@@ -94,6 +96,15 @@ class RequestLogMiddleware:
             request_id_var.reset(token)
 
 
+# Span URLs are exported to X-Ray as-is, and the share token is part of the path.
+def _redact_share_token(span: trace.Span, scope: dict[str, Any]) -> None:
+    attributes = getattr(span, "attributes", None) or {}
+    for key in _URL_ATTRIBUTES:
+        value = attributes.get(key)
+        if isinstance(value, str):
+            span.set_attribute(key, _SHARE_TOKEN_IN_PATH.sub(r"\1{token}", value))
+
+
 # Tracing is on only with an OTLP endpoint (the collector sidecar); local runs and tests stay quiet.
 def setup_tracing(app: FastAPI, environment: str, exporter: SpanExporter | None = None) -> bool:
     if exporter is None:
@@ -114,7 +125,12 @@ def setup_tracing(app: FastAPI, environment: str, exporter: SpanExporter | None 
     trace.set_tracer_provider(provider)
     set_global_textmap(AwsXRayPropagator())
 
-    FastAPIInstrumentor.instrument_app(app, excluded_urls="health,ready", tracer_provider=provider)
+    FastAPIInstrumentor.instrument_app(
+        app,
+        excluded_urls="health,ready",
+        tracer_provider=provider,
+        server_request_hook=_redact_share_token,
+    )
     BotocoreInstrumentor().instrument(tracer_provider=provider)  # type: ignore[no-untyped-call]
     SQLAlchemyInstrumentor().instrument(tracer_provider=provider)
     return True
