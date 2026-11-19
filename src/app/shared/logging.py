@@ -21,8 +21,11 @@ class JsonFormatter(logging.Formatter):
 
 
 def configure_logging() -> None:
+    from app.shared.observability import RequestContextFilter
+
     handler = logging.StreamHandler()
     handler.setFormatter(JsonFormatter())
+    handler.addFilter(RequestContextFilter())
     logger = logging.getLogger("app")
     logger.handlers = [handler]
     logger.setLevel(logging.INFO)
