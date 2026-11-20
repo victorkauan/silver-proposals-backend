@@ -14,6 +14,7 @@ from app.features.sharing.schemas import (
     SharedProposal,
     ShareLinkCreate,
     ShareLinkCreated,
+    ShareLinkResolve,
     ShareLinkSummary,
 )
 from app.shared.db import get_session
@@ -22,6 +23,7 @@ from app.shared.rate_limit import rate_limit
 router = APIRouter(tags=["sharing"])
 
 DbSession = Annotated[Session, Depends(get_session)]
+PUBLIC_RATE_LIMIT = Depends(rate_limit("60/minute", scope="public_share"))
 
 
 def _summary(link: ShareLink) -> ShareLinkSummary:
@@ -67,10 +69,22 @@ def revoke(
     service.revoke(session, proposal_id, link_id)
 
 
+@router.post(
+    "/public/proposals/resolve",
+    summary="Read a shared proposal without logging in",
+    dependencies=[PUBLIC_RATE_LIMIT],
+)
+def resolve_shared(
+    body: ShareLinkResolve, session: DbSession, response: Response
+) -> SharedProposal:
+    return read_shared(body.token, session, response)
+
+
 @router.get(
     "/public/proposals/{token}",
-    summary="Read a shared proposal without logging in",
-    dependencies=[Depends(rate_limit("60/minute"))],
+    summary="Read a shared proposal using the legacy URL",
+    deprecated=True,
+    dependencies=[PUBLIC_RATE_LIMIT],
 )
 def read_shared(token: str, session: DbSession, response: Response) -> SharedProposal:
     proposal = service.resolve(session, token)

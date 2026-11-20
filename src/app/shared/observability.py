@@ -98,6 +98,9 @@ class RequestLogMiddleware:
 
 # Span URLs are exported to X-Ray as-is, and the share token is part of the path.
 def _redact_share_token(span: trace.Span, scope: dict[str, Any]) -> None:
+    if scope.get("method") == "POST" and scope.get("path") == "/public/proposals/resolve":
+        return
+
     attributes = getattr(span, "attributes", None) or {}
     for key in _URL_ATTRIBUTES:
         value = attributes.get(key)

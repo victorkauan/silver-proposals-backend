@@ -13,12 +13,12 @@ storage = MemoryStorage()
 limiter = MovingWindowRateLimiter(storage)
 
 
-def rate_limit(limit: str) -> Callable[[Request], None]:
+def rate_limit(limit: str, *, scope: str | None = None) -> Callable[[Request], None]:
     item = parse(limit)
 
     def dependency(request: Request) -> None:
         client = request.client.host if request.client else "unknown"
-        if not limiter.hit(item, request.url.path, client):
+        if not limiter.hit(item, scope or request.url.path, client):
             raise AppError(ErrorCode.RATE_LIMITED, status.HTTP_429_TOO_MANY_REQUESTS)
 
     return dependency
