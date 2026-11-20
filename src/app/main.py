@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.features.account.router import router as account_router
 from app.features.auth.router import router as auth_router
 from app.features.auth.service import purge_refresh_tokens
+from app.features.dashboard.router import router as dashboard_router
 from app.features.generation.router import router as generation_router
 from app.features.health.router import router as health_router
 from app.features.proposals.router import router as proposals_router
@@ -64,6 +65,7 @@ def create_app() -> FastAPI:
     app.include_router(health_router)
     app.include_router(auth_router)
     app.include_router(account_router)
+    app.include_router(dashboard_router)
     app.include_router(security_router)
     app.include_router(proposals_router)
     app.include_router(generation_router)
