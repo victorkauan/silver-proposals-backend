@@ -12,6 +12,7 @@
 | [Error codes](reference/error-codes.md) | Reference |
 | [Proposal generation](reference/generation.md) | Reference |
 | [Health checks](reference/health-checks.md) | Reference |
+| [Dashboard](reference/dashboard.md) | Reference |
 | [Proposals](reference/proposals.md) | Reference |
 | [Content and versions](reference/versions.md) | Reference |
 | [Public share links](reference/sharing.md) | Reference |
