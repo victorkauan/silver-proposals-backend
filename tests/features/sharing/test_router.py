@@ -39,7 +39,7 @@ def share(client: TestClient, owner: AuthenticatedUser, proposal_id: str, **body
 
 
 def public(client: TestClient, token: str) -> Any:
-    return client.get(f"/public/proposals/{token}")
+    return client.post("/public/proposals/resolve", json={"token": token})
 
 
 def test_valid_link_shows_only_public_fields(client: TestClient, make_user: MakeUser) -> None:
@@ -57,6 +57,7 @@ def test_valid_link_shows_only_public_fields(client: TestClient, make_user: Make
     assert response.json()["content"] == "# Proposta\n\nTexto"
     assert response.headers["cache-control"] == "no-store"
     assert response.headers["x-robots-tag"] == "noindex"
+    assert client.get(f"/public/proposals/{created.json()['token']}").json() == response.json()
 
 
 def test_expired_link_is_not_found(client: TestClient, make_user: MakeUser) -> None:
@@ -155,3 +156,10 @@ def test_token_is_stored_only_as_a_hash(client: TestClient, make_user: MakeUser)
 
     assert stored.token_hash != token
     assert len(stored.token_hash) == 64
+
+
+def test_public_limit_applies_across_tokens_and_resolver_routes(client: TestClient) -> None:
+    for index in range(60):
+        assert public(client, f"unknown-{index}").status_code == 404
+
+    assert client.get("/public/proposals/another-unknown").status_code == 429

@@ -22,6 +22,10 @@ def build_app() -> FastAPI:
     def public(token: str) -> dict[str, str]:
         return {"token": token}
 
+    @app.post("/public/proposals/resolve")
+    def resolve() -> None:
+        return None
+
     @app.get("/boom")
     def boom() -> None:
         raise HTTPException(status_code=503)
@@ -134,19 +138,24 @@ def test_tracing_exports_request_spans_with_xray_ids() -> None:
     app = build_app()
 
     assert setup_tracing(app, "staging", exporter=exporter) is True
-    TestClient(app).get("/public/proposals/secret-share-token?x=1")
+    client = TestClient(app)
+    client.get("/public/proposals/secret-share-token?x=1")
+    client.post("/public/proposals/resolve", json={"token": "secret-share-body"})
     from opentelemetry import trace
 
     trace.get_tracer_provider().force_flush()  # type: ignore[attr-defined]
 
     spans = exporter.get_finished_spans()
     server = [s for s in spans if s.kind.name == "SERVER"]
-    assert server, [s.name for s in spans]
+    assert len(server) == 2, [s.name for s in spans]
     assert server[0].attributes is not None
     assert server[0].attributes.get("http.route") == "/public/proposals/{token}"
     assert server[0].resource.attributes["deployment.environment"] == "staging"
     exported = json.dumps([dict(s.attributes or {}) | {"name": s.name} for s in spans])
     assert "secret-share-token" not in exported
+    assert "secret-share-body" not in exported
     assert "/public/proposals/{token}" in exported
+    assert server[1].attributes is not None
+    assert server[1].attributes.get("http.target") == "/public/proposals/resolve"
     # X-Ray trace IDs start with the epoch seconds of the trace.
     assert f"{server[0].context.trace_id:032x}"[:8] != "00000000"

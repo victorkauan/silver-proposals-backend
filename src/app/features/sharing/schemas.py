@@ -21,6 +21,10 @@ class ShareLinkCreated(ShareLinkSummary):
     token: str
 
 
+class ShareLinkResolve(BaseModel):
+    token: str
+
+
 class SharedProposal(BaseModel):
     title: str
     client_name: str

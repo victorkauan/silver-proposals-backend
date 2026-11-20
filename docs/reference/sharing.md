@@ -17,7 +17,9 @@ shared proposals. To share again, create a new link.
 
 ## Reading a shared proposal (public)
 
-`GET /public/proposals/{token}`: no authentication, rate limited to 60 requests per minute per IP.
+`POST /public/proposals/resolve` accepts `{"token":"..."}` without authentication. The request body keeps the token
+out of the ALB request line. The legacy `GET /public/proposals/{token}` endpoint is deprecated and retained for
+clients already using it. Both endpoints share a limit of 60 requests per minute per IP.
 
 ```json
 { "title": "...", "client_name": "...", "content": "# Proposta...", "updated_at": "..." }
