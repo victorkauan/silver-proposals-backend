@@ -14,17 +14,11 @@ from app.features.account.schemas import (
     ExportedVersion,
 )
 from app.features.auth import repository as auth_repository
-from app.features.auth import security
 from app.features.auth.models import User
-from app.features.auth.service import accept_privacy, normalize_email
+from app.features.auth.service import accept_privacy, confirm_password, normalize_email
 from app.shared.errors import AppError, ErrorCode
 
 logger = logging.getLogger(__name__)
-
-
-def _confirm_password(user: User, password: str) -> None:
-    if not security.verify_password(user.password_hash, password):
-        raise AppError(ErrorCode.INVALID_PASSWORD, status.HTTP_403_FORBIDDEN)
 
 
 def update_profile(session: Session, user: User, name: str) -> User:
@@ -35,7 +29,7 @@ def update_profile(session: Session, user: User, name: str) -> User:
 
 
 def change_email(session: Session, user: User, email: str, password: str) -> User:
-    _confirm_password(user, password)
+    confirm_password(user, password)
     email = normalize_email(email)
     existing = auth_repository.get_user_by_email(session, email)
     if existing is not None and existing.id != user.id:
@@ -88,7 +82,7 @@ def export(session: Session, user: User) -> AccountExport:
 
 
 def delete_account(session: Session, user: User, password: str) -> None:
-    _confirm_password(user, password)
+    confirm_password(user, password)
     removed = repository.delete_sole_owned_proposals(session, user.id)
     # Memberships and sessions cascade; authored versions and share links keep a null author.
     session.delete(user)

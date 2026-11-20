@@ -23,6 +23,12 @@ Clients should branch on `code`, never on `message`.
 | `version_not_found` | 404 | Versão não encontrada. |
 | `share_link_not_found` | 404 | Link inválido ou expirado. |
 | `invalid_password` | 403 | Senha incorreta. |
+| `invalid_challenge` | 401 | A verificação expirou. Entre com seu e-mail e senha novamente. |
+| `invalid_two_factor_code` | 401 (login), 400 (account) | Código inválido. Confira o app autenticador e tente de novo. |
+| `two_factor_already_enabled` | 409 | A verificação em duas etapas já está ativa. |
+| `two_factor_not_enabled` | 409 | A verificação em duas etapas não está ativa. |
+| `two_factor_setup_required` | 409 | Comece a configuração do app autenticador novamente. |
+| `session_not_found` | 404 | Sessão não encontrada ou já encerrada. |
 | `generation_unavailable` | stream `error` | O serviço de IA está ocupado. Tente novamente em instantes. |
 | `generation_timeout` | stream `error` | A geração demorou demais. Tente novamente. |
 | `generation_failed` | stream `error` | Não foi possível gerar a proposta. Tente novamente. |

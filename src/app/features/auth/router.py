@@ -1,11 +1,18 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Cookie, Depends, Response, status
+from fastapi import APIRouter, Cookie, Depends, Header, Response, status
 from sqlalchemy.orm import Session
 
-from app.features.auth import service
+from app.features.auth import security, service
 from app.features.auth.dependencies import CurrentUser
-from app.features.auth.schemas import LoginRequest, RegisterRequest, TokenResponse, UserResponse
+from app.features.auth.schemas import (
+    LoginRequest,
+    RegisterRequest,
+    TokenResponse,
+    TwoFactorChallengeResponse,
+    TwoFactorLoginRequest,
+    UserResponse,
+)
 from app.shared.config import get_settings
 from app.shared.db import get_session
 from app.shared.rate_limit import rate_limit
@@ -17,6 +24,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 DbSession = Annotated[Session, Depends(get_session)]
 RefreshCookie = Annotated[str | None, Cookie(alias=REFRESH_COOKIE)]
+UserAgent = Annotated[str | None, Header()]
 
 
 def _respond(response: Response, result: service.AuthSession) -> TokenResponse:
@@ -44,8 +52,12 @@ def _respond(response: Response, result: service.AuthSession) -> TokenResponse:
     summary="Create an account and start a session",
     dependencies=[Depends(rate_limit("3/minute"))],
 )
-def register(body: RegisterRequest, session: DbSession, response: Response) -> TokenResponse:
-    return _respond(response, service.register(session, body.email, body.name, body.password))
+def register(
+    body: RegisterRequest, session: DbSession, response: Response, user_agent: UserAgent = None
+) -> TokenResponse:
+    return _respond(
+        response, service.register(session, body.email, body.name, body.password, user_agent)
+    )
 
 
 @router.post(
@@ -53,8 +65,33 @@ def register(body: RegisterRequest, session: DbSession, response: Response) -> T
     summary="Start a session",
     dependencies=[Depends(rate_limit("5/minute"))],
 )
-def login(body: LoginRequest, session: DbSession, response: Response) -> TokenResponse:
-    return _respond(response, service.login(session, body.email, body.password))
+def login(
+    body: LoginRequest, session: DbSession, response: Response, user_agent: UserAgent = None
+) -> TokenResponse | TwoFactorChallengeResponse:
+    result = service.login(session, body.email, body.password, user_agent)
+    if isinstance(result, service.TwoFactorChallenge):
+        return TwoFactorChallengeResponse(
+            challenge_token=result.challenge_token,
+            expires_in=int(security.CHALLENGE_TTL.total_seconds()),
+        )
+    return _respond(response, result)
+
+
+@router.post(
+    "/login/two-factor",
+    summary="Finish a login with an authenticator or recovery code",
+    dependencies=[Depends(rate_limit("5/minute"))],
+)
+def login_two_factor(
+    body: TwoFactorLoginRequest,
+    session: DbSession,
+    response: Response,
+    user_agent: UserAgent = None,
+) -> TokenResponse:
+    return _respond(
+        response,
+        service.complete_two_factor(session, body.challenge_token, body.code, user_agent),
+    )
 
 
 @router.post(
@@ -63,9 +100,12 @@ def login(body: LoginRequest, session: DbSession, response: Response) -> TokenRe
     dependencies=[Depends(rate_limit("30/minute"))],
 )
 def refresh(
-    session: DbSession, response: Response, refresh_token: RefreshCookie = None
+    session: DbSession,
+    response: Response,
+    refresh_token: RefreshCookie = None,
+    user_agent: UserAgent = None,
 ) -> TokenResponse:
-    return _respond(response, service.refresh(session, refresh_token))
+    return _respond(response, service.refresh(session, refresh_token, user_agent))
 
 
 @router.post(

@@ -1,7 +1,10 @@
+import base64
 import os
+import secrets
 import uuid
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -14,8 +17,9 @@ from testcontainers.community.postgres import PostgresContainer
 os.environ.setdefault("DATABASE_URL", "postgresql+psycopg://unused:unused@localhost:1/unused")
 os.environ.setdefault("JWT_SECRET", "test-only-secret-with-at-least-32-characters")
 os.environ.setdefault("TOKEN_PURGE_INTERVAL_MINUTES", "0")
+os.environ.setdefault("TOTP_ENCRYPTION_KEY", base64.b64encode(secrets.token_bytes(32)).decode())
 
-from app.features.auth.models import User
+from app.features.auth.models import RefreshToken, User
 from app.features.auth.security import create_access_token
 from app.main import app
 from app.shared.config import get_settings
@@ -57,8 +61,8 @@ def database(migrated_database: str) -> Iterator[str]:
     with get_engine().begin() as connection:
         connection.execute(
             text(
-                "TRUNCATE users, refresh_tokens, proposals, proposal_members, proposal_versions,"
-                " share_links"
+                "TRUNCATE users, refresh_tokens, recovery_codes, proposals, proposal_members,"
+                " proposal_versions, share_links"
                 " CASCADE"
             )
         )
@@ -82,8 +86,18 @@ def make_user(database: str) -> Callable[[str], AuthenticatedUser]:
         with get_session_factory()() as session:
             user = User(email=f"{name}@example.com", name=name, password_hash="not-used")
             session.add(user)
+            session.flush()
+            family_id = uuid.uuid4()
+            session.add(
+                RefreshToken(
+                    user_id=user.id,
+                    family_id=family_id,
+                    token_hash=secrets.token_hex(32),
+                    expires_at=datetime.now(UTC) + timedelta(days=1),
+                )
+            )
             session.commit()
-            token = create_access_token(user.id)
+            token = create_access_token(user.id, family_id)
             return AuthenticatedUser(user.id, {"Authorization": f"Bearer {token}"})
 
     return factory

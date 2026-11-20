@@ -19,3 +19,11 @@ def test_settings_require_database_url(monkeypatch: pytest.MonkeyPatch) -> None:
 
     with pytest.raises(ValidationError):
         Settings(_env_file=None)
+
+
+@pytest.mark.parametrize("key", ["not base64!", "c2hvcnQ="])
+def test_settings_reject_a_malformed_totp_key(monkeypatch: pytest.MonkeyPatch, key: str) -> None:
+    monkeypatch.setenv("TOTP_ENCRYPTION_KEY", key)
+
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None)

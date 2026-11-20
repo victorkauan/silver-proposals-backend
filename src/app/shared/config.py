@@ -1,7 +1,9 @@
+import base64
+import binascii
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -11,6 +13,7 @@ class Settings(BaseSettings):
     environment: Literal["local", "staging", "prod"] = "local"
     database_url: str
     jwt_secret: str = Field(min_length=32)
+    totp_encryption_key: str
     access_token_ttl_minutes: int = 15
     refresh_token_ttl_days: int = 7
     cors_origins: list[str] = []
@@ -21,6 +24,21 @@ class Settings(BaseSettings):
     bedrock_read_timeout_seconds: int = 120
     generation_max_tokens: int = 4096
     token_purge_interval_minutes: int = Field(default=360, ge=0)
+
+    @field_validator("totp_encryption_key")
+    @classmethod
+    def _check_key(cls, value: str) -> str:
+        try:
+            key = base64.b64decode(value, validate=True)
+        except binascii.Error as error:
+            raise ValueError("must be base64") from error
+        if len(key) != 32:
+            raise ValueError("must decode to 32 bytes (AES-256)")
+        return value
+
+    @property
+    def totp_key(self) -> bytes:
+        return base64.b64decode(self.totp_encryption_key)
 
 
 @lru_cache

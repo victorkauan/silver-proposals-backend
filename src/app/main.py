@@ -12,6 +12,7 @@ from app.features.auth.service import purge_refresh_tokens
 from app.features.generation.router import router as generation_router
 from app.features.health.router import router as health_router
 from app.features.proposals.router import router as proposals_router
+from app.features.security.router import router as security_router
 from app.features.sharing.router import router as sharing_router
 from app.features.versions.router import router as versions_router
 from app.shared.config import get_settings
@@ -63,6 +64,7 @@ def create_app() -> FastAPI:
     app.include_router(health_router)
     app.include_router(auth_router)
     app.include_router(account_router)
+    app.include_router(security_router)
     app.include_router(proposals_router)
     app.include_router(generation_router)
     app.include_router(versions_router)
