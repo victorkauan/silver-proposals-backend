@@ -12,6 +12,9 @@ Design decision: [ADR-0001](../adr/0001-refresh-token-in-httponly-cookie.md).
 | `POST /auth/logout` | refresh cookie | none | `204` and the cookie is cleared | none |
 | `GET /auth/me` | `Authorization: Bearer` | none | `200` user | `401 not_authenticated`, `401 invalid_token` |
 
+Sign-up body: `{ "email", "name", "password", "accept_privacy": true }`; without the acceptance it returns `422`
+([privacy notice](account.md#privacy-notice)).
+
 Token response:
 
 ```json
@@ -19,9 +22,18 @@ Token response:
   "access_token": "<JWT>",
   "token_type": "bearer",
   "expires_in": 900,
-  "user": { "id": "<uuid>", "email": "ana@example.com", "name": "Ana Lima" }
+  "user": {
+    "id": "<uuid>",
+    "email": "ana@example.com",
+    "name": "Ana Lima",
+    "created_at": "2026-11-20T18:00:00Z",
+    "privacy_up_to_date": true,
+    "privacy_accepted_at": "2026-11-20T18:00:00Z"
+  }
 }
 ```
+
+Profile, e-mail, data export, and account deletion are in [Account and personal data](account.md).
 
 ## Tokens
 
@@ -34,7 +46,7 @@ Token response:
 
 **Rotation and reuse detection.** Every refresh marks the presented token as used and issues a new one in the same family.
 Presenting a used token again means it was copied, so every token of that family is revoked and the user has to log in again.
-Logout revokes the family.
+Logout revokes the family. Expired tokens are deleted periodically ([cleanup](account.md#refresh-token-cleanup)).
 
 ## Passwords
 

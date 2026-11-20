@@ -13,6 +13,7 @@ from testcontainers.community.postgres import PostgresContainer
 
 os.environ.setdefault("DATABASE_URL", "postgresql+psycopg://unused:unused@localhost:1/unused")
 os.environ.setdefault("JWT_SECRET", "test-only-secret-with-at-least-32-characters")
+os.environ.setdefault("TOKEN_PURGE_INTERVAL_MINUTES", "0")
 
 from app.features.auth.models import User
 from app.features.auth.security import create_access_token

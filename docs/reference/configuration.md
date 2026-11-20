@@ -16,6 +16,7 @@ Settings are read from environment variables, or from `.env` in local developmen
 | `BEDROCK_REGION` | no | `us-east-1` | Region of the Bedrock runtime endpoint |
 | `BEDROCK_READ_TIMEOUT_SECONDS` | no | `120` | Read timeout for the streaming connection |
 | `GENERATION_MAX_TOKENS` | no | `4096` | Output token limit for each generation |
+| `TOKEN_PURGE_INTERVAL_MINUTES` | no | `360` | How often expired refresh tokens are deleted; `0` turns the task off |
 
 Tracing is configured with the standard OpenTelemetry variables (`OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_SERVICE_NAME`); see [Observability](observability.md).
 

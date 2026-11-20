@@ -6,7 +6,7 @@ from fastapi import status
 from sqlalchemy.orm import Session
 
 from app.features.auth import repository, security
-from app.features.auth.models import User
+from app.features.auth.models import PRIVACY_NOTICE_VERSION, User
 from app.shared.config import get_settings
 from app.shared.errors import AppError, ErrorCode
 
@@ -40,6 +40,7 @@ def register(session: Session, email: str, name: str, password: str) -> AuthSess
     if repository.get_user_by_email(session, email) is not None:
         raise AppError(ErrorCode.EMAIL_TAKEN, status.HTTP_409_CONFLICT)
     user = repository.add_user(session, email, name, security.hash_password(password))
+    accept_privacy(user)
     result = _start_session(session, user)
     session.commit()
     return result
@@ -81,6 +82,17 @@ def refresh(session: Session, refresh_token: str | None) -> AuthSession:
     result = _start_session(session, user, stored.family_id)
     session.commit()
     return result
+
+
+def accept_privacy(user: User) -> None:
+    user.privacy_version = PRIVACY_NOTICE_VERSION
+    user.privacy_accepted_at = datetime.now(UTC)
+
+
+def purge_refresh_tokens(session: Session) -> int:
+    removed = repository.delete_expired_refresh_tokens(session, datetime.now(UTC))
+    session.commit()
+    return removed
 
 
 def logout(session: Session, refresh_token: str | None) -> None:
