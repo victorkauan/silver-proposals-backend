@@ -40,7 +40,10 @@ A dropped connection discards the partial text, and the saved content stays as i
 ## Prompt
 
 The system prompt (`src/app/features/generation/system_prompt.md`) asks for a pt-BR Markdown proposal with fixed sections,
-`[A DEFINIR]` for missing facts, and no invented values. The title, client, and briefing go in the user message. The
+`[A DEFINIR]` for missing facts, and no invented values. It also forbids adding deliverables or commercial terms (payment
+method or dates, renewal, fines, refunds, warranty, support) that the briefing does not state, changing the briefing's
+values or payment terms, and explaining acronyms. An evaluation with 10 real proposals showed that, without these rules,
+the model filled gaps with plausible but unrequested terms instead of `[A DEFINIR]`. The title, client, and briefing go in the user message. The
 briefing is escaped and wrapped in `<briefing>` tags, and the model is told to treat it as data only. The prompt is never
 returned by the API or written to logs.
 

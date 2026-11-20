@@ -24,6 +24,19 @@ def test_system_prompt_is_not_part_of_the_user_prompt() -> None:
 
 
 @pytest.mark.parametrize(
+    "rule",
+    [
+        "Não acrescente serviços, entregáveis",
+        "Não acrescente condições comerciais ou contratuais",
+        "Reproduza exatamente os valores",
+        "Não explique o significado de siglas",
+    ],
+)
+def test_system_prompt_forbids_unsupported_additions(rule: str) -> None:
+    assert rule in SYSTEM_PROMPT
+
+
+@pytest.mark.parametrize(
     ("raw", "expected"),
     [
         ("```markdown\n# Proposta\n\nTexto\n```", "# Proposta\n\nTexto"),
