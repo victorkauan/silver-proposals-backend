@@ -1,3 +1,4 @@
+import uuid
 from collections.abc import Callable
 
 from fastapi import Request, status
@@ -21,3 +22,10 @@ def rate_limit(limit: str) -> Callable[[Request], None]:
             raise AppError(ErrorCode.RATE_LIMITED, status.HTTP_429_TOO_MANY_REQUESTS)
 
     return dependency
+
+
+USER_LIMIT = parse("10/15 minutes")
+
+
+def hit_user_limit(scope: str, user_id: uuid.UUID) -> bool:
+    return limiter.hit(USER_LIMIT, scope, str(user_id))

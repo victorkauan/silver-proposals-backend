@@ -29,6 +29,23 @@ class UserResponse(BaseModel):
     created_at: datetime
     privacy_up_to_date: bool
     privacy_accepted_at: datetime | None
+    two_factor_enabled: bool
+
+
+TwoFactorCode = Annotated[
+    str, StringConstraints(strip_whitespace=True, min_length=6, max_length=20)
+]
+
+
+class TwoFactorLoginRequest(BaseModel):
+    challenge_token: Annotated[str, Field(min_length=1, max_length=2048)]
+    code: TwoFactorCode
+
+
+class TwoFactorChallengeResponse(BaseModel):
+    two_factor_required: Literal[True] = True
+    challenge_token: str
+    expires_in: int
 
 
 class TokenResponse(BaseModel):

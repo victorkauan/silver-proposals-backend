@@ -8,6 +8,7 @@ dependencies = [
     "alembic>=1.14",
     "argon2-cffi>=25.1.0",
     "boto3>=1.44.5",
+    "cryptography>=50.0.2",
     "fastapi>=0.115",
     "limits>=5.8.0",
     "opentelemetry-exporter-otlp-proto-http>=1.45.2",
@@ -21,6 +22,7 @@ dependencies = [
     "pydantic-settings>=2.6",
     "pydantic[email]>=2.14.3",
     "pyjwt>=2.15.1",
+    "pyotp>=2.10.0,<2.11",
     "sqlalchemy>=2.0",
     "uvicorn[standard]>=0.32",
 ]

@@ -20,21 +20,63 @@ def test_verify_password_rejects_malformed_hash() -> None:
 
 
 def test_access_token_round_trip() -> None:
-    user_id = uuid.uuid4()
+    user_id, session_id = uuid.uuid4(), uuid.uuid4()
 
-    assert security.decode_access_token(security.create_access_token(user_id)) == user_id
+    claims = security.decode_access_token(security.create_access_token(user_id, session_id))
+
+    assert claims == security.AccessClaims(user_id, session_id)
 
 
 def test_expired_access_token_is_rejected() -> None:
     issued = datetime.now(UTC) - timedelta(hours=1)
+    token = security.create_access_token(uuid.uuid4(), uuid.uuid4(), issued)
 
-    assert security.decode_access_token(security.create_access_token(uuid.uuid4(), issued)) is None
+    assert security.decode_access_token(token) is None
+
+
+def test_access_token_without_a_session_id_is_rejected() -> None:
+    token = jwt.encode(
+        {
+            "sub": str(uuid.uuid4()),
+            "type": "access",
+            "iat": datetime.now(UTC),
+            "exp": datetime.now(UTC) + timedelta(minutes=5),
+        },
+        get_settings().jwt_secret,
+        algorithm="HS256",
+    )
+
+    assert security.decode_access_token(token) is None
+
+
+def test_challenge_token_round_trip_and_type_separation() -> None:
+    user_id = uuid.uuid4()
+    challenge = security.create_challenge_token(user_id, "binding")
+
+    assert security.decode_challenge_token(challenge) == security.ChallengeClaims(
+        user_id, "binding"
+    )
+    assert security.decode_access_token(challenge) is None
+    access = security.create_access_token(user_id, uuid.uuid4())
+    assert security.decode_challenge_token(access) is None
+
+
+def test_expired_challenge_token_is_rejected() -> None:
+    issued = datetime.now(UTC) - timedelta(minutes=6)
+
+    assert (
+        security.decode_challenge_token(
+            security.create_challenge_token(uuid.uuid4(), "binding", issued)
+        )
+        is None
+    )
 
 
 def test_token_signed_with_another_secret_is_rejected() -> None:
     forged = jwt.encode(
         {
             "sub": str(uuid.uuid4()),
+            "sid": str(uuid.uuid4()),
             "type": "access",
             "iat": datetime.now(UTC),
             "exp": datetime.now(UTC) + timedelta(minutes=5),

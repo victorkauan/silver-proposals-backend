@@ -31,9 +31,12 @@ class ExportedAccount(BaseModel):
     updated_at: datetime
     privacy_version: str | None
     privacy_accepted_at: datetime | None
+    totp_enabled_at: datetime | None
 
 
 class ExportedSession(BaseModel):
+    session_started_at: datetime
+    user_agent: str | None
     created_at: datetime
     expires_at: datetime
     used_at: datetime | None

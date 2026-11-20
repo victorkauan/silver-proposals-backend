@@ -29,13 +29,13 @@ When the notice text changes, bump the version.
 
 | Key | Content |
 |---|---|
-| `account` | id, e-mail, name, creation and update times, accepted notice version and time |
-| `sessions` | creation, expiry, use, and revocation times of each refresh token (no hashes) |
+| `account` | id, e-mail, name, creation and update times, accepted notice version and time, when 2FA was turned on |
+| `sessions` | session start, browser (`User-Agent`), creation, expiry, use, and revocation times of each refresh token (no hashes) |
 | `proposals` | every proposal the user is a member of, with the user's role, briefing, and current content |
 | `authored_versions` | every version the user wrote, with its content |
 | `share_links_created` | proposal, creation, expiry, and revocation times of the links the user created (no tokens or hashes) |
 
-Password and token hashes never leave the database.
+Password and token hashes, the two-factor secret, and recovery-code hashes never leave the database.
 
 ## Account deletion
 

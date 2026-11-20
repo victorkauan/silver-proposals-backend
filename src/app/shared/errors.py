@@ -24,6 +24,12 @@ class ErrorCode(StrEnum):
     VERSION_NOT_FOUND = "version_not_found"
     SHARE_LINK_NOT_FOUND = "share_link_not_found"
     INVALID_PASSWORD = "invalid_password"
+    INVALID_CHALLENGE = "invalid_challenge"
+    INVALID_TWO_FACTOR_CODE = "invalid_two_factor_code"
+    TWO_FACTOR_ALREADY_ENABLED = "two_factor_already_enabled"
+    TWO_FACTOR_NOT_ENABLED = "two_factor_not_enabled"
+    TWO_FACTOR_SETUP_REQUIRED = "two_factor_setup_required"
+    SESSION_NOT_FOUND = "session_not_found"
 
 
 MESSAGES: dict[ErrorCode, str] = {
@@ -46,6 +52,14 @@ MESSAGES: dict[ErrorCode, str] = {
     ErrorCode.VERSION_NOT_FOUND: "Versão não encontrada.",
     ErrorCode.SHARE_LINK_NOT_FOUND: "Link inválido ou expirado.",
     ErrorCode.INVALID_PASSWORD: "Senha incorreta.",
+    ErrorCode.INVALID_CHALLENGE: "A verificação expirou. Entre com seu e-mail e senha novamente.",
+    ErrorCode.INVALID_TWO_FACTOR_CODE: (
+        "Código inválido. Confira o app autenticador e tente de novo."
+    ),
+    ErrorCode.TWO_FACTOR_ALREADY_ENABLED: "A verificação em duas etapas já está ativa.",
+    ErrorCode.TWO_FACTOR_NOT_ENABLED: "A verificação em duas etapas não está ativa.",
+    ErrorCode.TWO_FACTOR_SETUP_REQUIRED: "Comece a configuração do app autenticador novamente.",
+    ErrorCode.SESSION_NOT_FOUND: "Sessão não encontrada ou já encerrada.",
 }
 
 
