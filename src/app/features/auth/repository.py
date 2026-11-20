@@ -1,7 +1,8 @@
 import uuid
 from datetime import datetime
+from typing import cast
 
-from sqlalchemy import select, update
+from sqlalchemy import CursorResult, delete, select, update
 from sqlalchemy.orm import Session
 
 from app.features.auth.models import RefreshToken, User
@@ -48,3 +49,9 @@ def revoke_family(session: Session, family_id: uuid.UUID, now: datetime) -> None
         .where(RefreshToken.family_id == family_id, RefreshToken.revoked_at.is_(None))
         .values(revoked_at=now)
     )
+
+
+def delete_expired_refresh_tokens(session: Session, now: datetime) -> int:
+    # Revoked and rotated tokens stay until they expire: reuse detection needs them until then.
+    result = session.execute(delete(RefreshToken).where(RefreshToken.expires_at <= now))
+    return cast(CursorResult[tuple[()]], result).rowcount

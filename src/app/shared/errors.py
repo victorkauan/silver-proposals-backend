@@ -23,6 +23,7 @@ class ErrorCode(StrEnum):
     VERSION_CONFLICT = "version_conflict"
     VERSION_NOT_FOUND = "version_not_found"
     SHARE_LINK_NOT_FOUND = "share_link_not_found"
+    INVALID_PASSWORD = "invalid_password"
 
 
 MESSAGES: dict[ErrorCode, str] = {
@@ -44,6 +45,7 @@ MESSAGES: dict[ErrorCode, str] = {
     ),
     ErrorCode.VERSION_NOT_FOUND: "Versão não encontrada.",
     ErrorCode.SHARE_LINK_NOT_FOUND: "Link inválido ou expirado.",
+    ErrorCode.INVALID_PASSWORD: "Senha incorreta.",
 }
 
 

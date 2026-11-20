@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     bedrock_region: str = "us-east-1"
     bedrock_read_timeout_seconds: int = 120
     generation_max_tokens: int = 4096
+    token_purge_interval_minutes: int = Field(default=360, ge=0)
 
 
 @lru_cache

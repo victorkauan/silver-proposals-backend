@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, StringConstraints
@@ -11,6 +12,7 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     name: Name
     password: Password
+    accept_privacy: Literal[True]
 
 
 class LoginRequest(BaseModel):
@@ -24,6 +26,9 @@ class UserResponse(BaseModel):
     id: uuid.UUID
     email: str
     name: str
+    created_at: datetime
+    privacy_up_to_date: bool
+    privacy_accepted_at: datetime | None
 
 
 class TokenResponse(BaseModel):

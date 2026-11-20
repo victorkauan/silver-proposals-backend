@@ -9,7 +9,12 @@ from app.shared.db import get_session_factory
 
 pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("database")]
 
-USER = {"email": "Ana@Example.com", "name": "Ana Lima", "password": "uma senha longa"}
+USER: dict[str, Any] = {
+    "email": "Ana@Example.com",
+    "name": "Ana Lima",
+    "password": "uma senha longa",
+    "accept_privacy": True,
+}
 
 
 def register(client: TestClient, **overrides: Any) -> Any:
@@ -49,6 +54,25 @@ def test_password_is_stored_as_argon2_hash(client: TestClient) -> None:
         user = session.scalars(select(User)).one()
     assert user.password_hash.startswith("$argon2id$")
     assert USER["password"] not in user.password_hash
+
+
+def test_register_records_the_privacy_acceptance(client: TestClient) -> None:
+    user = register(client).json()["user"]
+
+    assert user["privacy_up_to_date"] is True
+    assert user["privacy_accepted_at"] is not None
+
+
+@pytest.mark.parametrize("accept", [False, None])
+def test_register_requires_accepting_the_privacy_notice(client: TestClient, accept: Any) -> None:
+    payload = {**USER, "accept_privacy": accept}
+    if accept is None:
+        del payload["accept_privacy"]
+
+    response = client.post("/auth/register", json=payload)
+
+    assert response.status_code == 422
+    assert response.json()["details"][0]["field"] == "accept_privacy"
 
 
 def test_register_rejects_duplicate_email(client: TestClient) -> None:

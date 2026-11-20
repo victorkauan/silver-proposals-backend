@@ -22,6 +22,7 @@ Clients should branch on `code`, never on `message`.
 | `version_conflict` | 409 | A proposta foi alterada por outra pessoa. Recarregue para ver a versão mais recente. |
 | `version_not_found` | 404 | Versão não encontrada. |
 | `share_link_not_found` | 404 | Link inválido ou expirado. |
+| `invalid_password` | 403 | Senha incorreta. |
 | `generation_unavailable` | stream `error` | O serviço de IA está ocupado. Tente novamente em instantes. |
 | `generation_timeout` | stream `error` | A geração demorou demais. Tente novamente. |
 | `generation_failed` | stream `error` | Não foi possível gerar a proposta. Tente novamente. |

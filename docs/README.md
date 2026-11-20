@@ -5,6 +5,7 @@
 | [ADR-0001: Refresh token in an httpOnly cookie](adr/0001-refresh-token-in-httponly-cookie.md) | Decision |
 | [ADR-0002: Streaming generation behind a provider interface](adr/0002-stream-generation-behind-a-provider-interface.md) | Decision |
 | [Authentication](reference/authentication.md) | Reference |
+| [Account and personal data](reference/account.md) | Reference |
 | [Configuration](reference/configuration.md) | Reference |
 | [Error codes](reference/error-codes.md) | Reference |
 | [Proposal generation](reference/generation.md) | Reference |
