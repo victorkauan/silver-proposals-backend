@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.features.proposals import repository
 from app.features.proposals.models import Proposal, ProposalRole
+from app.features.proposals.schemas import ProposalDetail, to_detail
 from app.shared.errors import AppError, ErrorCode
 
 ROLE_RANK = {ProposalRole.VIEWER: 1, ProposalRole.EDITOR: 2, ProposalRole.OWNER: 3}
@@ -60,3 +61,8 @@ def set_archived(session: Session, access: Access, archived: bool) -> Access:
 def delete(session: Session, access: Access) -> None:
     repository.delete(session, access.proposal)
     session.commit()
+
+
+def detail(session: Session, proposal: Proposal, role: ProposalRole) -> ProposalDetail:
+    status = repository.status_of(session, proposal.id, role, datetime.now(UTC))
+    return to_detail(proposal, role, status)

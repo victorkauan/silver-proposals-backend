@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timedelta
 
-from sqlalchemy import Integer, String, and_, case, cast, func, literal, select, union_all
+from sqlalchemy import Integer, String, and_, cast, func, literal, select, union_all
 from sqlalchemy.orm import Session
 
 from app.features.dashboard.schemas import (
@@ -9,7 +9,6 @@ from app.features.dashboard.schemas import (
     Activity,
     ActivityKind,
     DashboardSummary,
-    ProposalStatus,
     RecentProposal,
 )
 from app.features.proposals.models import (
@@ -19,6 +18,7 @@ from app.features.proposals.models import (
     ProposalVersion,
     VersionSource,
 )
+from app.features.proposals.status import ProposalStatus, status_expression
 from app.features.sharing.models import ShareLink
 
 PROPOSAL_LIMIT = 5
@@ -30,16 +30,7 @@ def summary(session: Session, user_id: uuid.UUID, now: datetime) -> DashboardSum
     membership = and_(ProposalMember.proposal_id == Proposal.id, ProposalMember.user_id == user_id)
     is_owner = ProposalMember.role == ProposalRole.OWNER
     is_active_link = and_(ShareLink.revoked_at.is_(None), ShareLink.expires_at > now)
-    has_active_link = (
-        select(ShareLink.id).where(ShareLink.proposal_id == Proposal.id, is_active_link).exists()
-    )
-    proposal_status = case(
-        (Proposal.archived_at.is_not(None), ProposalStatus.ARCHIVED.value),
-        (and_(is_owner, has_active_link), ProposalStatus.SHARED.value),
-        (ProposalVersion.source == VersionSource.GENERATED, ProposalStatus.GENERATED.value),
-        (Proposal.version > 0, ProposalStatus.EDITED.value),
-        else_=ProposalStatus.DRAFT.value,
-    ).label("status")
+    proposal_status = status_expression(is_owner, now).label("status")
     visible = (
         select(
             Proposal.id,
@@ -50,13 +41,6 @@ def summary(session: Session, user_id: uuid.UUID, now: datetime) -> DashboardSum
             proposal_status,
         )
         .join(ProposalMember, membership)
-        .outerjoin(
-            ProposalVersion,
-            and_(
-                ProposalVersion.proposal_id == Proposal.id,
-                ProposalVersion.number == Proposal.version,
-            ),
-        )
         .subquery()
     )
     counts = dict.fromkeys(ProposalStatus, 0)
