@@ -5,14 +5,7 @@ from enum import StrEnum
 from pydantic import BaseModel
 
 from app.features.proposals.models import ProposalRole
-
-
-class ProposalStatus(StrEnum):
-    DRAFT = "draft"
-    GENERATED = "generated"
-    EDITED = "edited"
-    SHARED = "shared"
-    ARCHIVED = "archived"
+from app.features.proposals.status import ProposalStatus
 
 
 class ActivityKind(StrEnum):

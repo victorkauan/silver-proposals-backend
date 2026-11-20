@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.features.auth.dependencies import CurrentUser
 from app.features.proposals import service as proposals
 from app.features.proposals.models import ProposalRole, ProposalVersion
-from app.features.proposals.schemas import ProposalDetail, to_detail
+from app.features.proposals.schemas import ProposalDetail
 from app.features.versions import repository, service
 from app.features.versions.schemas import ContentUpdate, VersionDetail, VersionPage, VersionSummary
 from app.shared.db import get_session
@@ -33,7 +33,7 @@ def save_content(
 ) -> ProposalDetail:
     access = proposals.authorize(session, proposal_id, user.id, ProposalRole.EDITOR)
     proposal = service.save_content(session, proposal_id, body.content, body.base_version, user.id)
-    return to_detail(proposal, access.role)
+    return proposals.detail(session, proposal, access.role)
 
 
 @router.get("/versions", summary="List the version history, newest first")
@@ -64,4 +64,4 @@ def restore(
 ) -> ProposalDetail:
     access = proposals.authorize(session, proposal_id, user.id, ProposalRole.EDITOR)
     proposal = service.restore(session, proposal_id, number, user.id)
-    return to_detail(proposal, access.role)
+    return proposals.detail(session, proposal, access.role)
