@@ -27,3 +27,21 @@ def test_settings_reject_a_malformed_totp_key(monkeypatch: pytest.MonkeyPatch, k
 
     with pytest.raises(ValidationError):
         Settings(_env_file=None)
+
+
+def test_settings_require_a_key_for_deepinfra(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("AI_PROVIDER", "deepinfra")
+    monkeypatch.delenv("DEEPINFRA_API_KEY", raising=False)
+
+    with pytest.raises(ValidationError, match="DEEPINFRA_API_KEY"):
+        Settings(_env_file=None)
+
+
+def test_settings_keep_the_deepinfra_key_secret(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("AI_PROVIDER", "deepinfra")
+    monkeypatch.setenv("DEEPINFRA_API_KEY", "secret-key")
+
+    settings = Settings(_env_file=None)
+
+    assert settings.deepinfra_api_key is not None
+    assert "secret-key" not in repr(settings)

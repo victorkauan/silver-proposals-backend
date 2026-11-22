@@ -55,15 +55,20 @@ If a model wraps the whole document in a code fence (```), the fence is removed 
 |---|---|
 | `fake` (default) | Local development and CI. Streams a fixed Markdown proposal word by word, with no network calls. `FAKE_PROVIDER_DELAY_MS` slows it down so the generation UI can be watched. |
 | `bedrock` | Amazon Bedrock Converse streaming API, with the model from `BEDROCK_MODEL_ID`. |
+| `deepinfra` | DeepInfra's OpenAI-compatible chat completions API with streaming, with the model from `DEEPINFRA_MODEL_ID`. Used while the AWS account's Bedrock quotas are zero ([ADR-0004](../adr/0004-use-deepinfra-while-bedrock-quotas-are-zero.md)). |
 
-Every request sets `maxTokens` (`GENERATION_MAX_TOKENS`, default 4096). Clients use adaptive retries and a read timeout
-(`BEDROCK_READ_TIMEOUT_SECONDS`).
+Every request sets the output token limit (`GENERATION_MAX_TOKENS`, default 4096). The Bedrock client uses adaptive
+retries and a read timeout (`BEDROCK_READ_TIMEOUT_SECONDS`). The DeepInfra client does not retry and has its own read
+timeout (`DEEPINFRA_READ_TIMEOUT_SECONDS`). Its HTTP 429 and 5xx answers map to `generation_unavailable`, and 504 to
+`generation_timeout`.
 
 ### Credentials and permissions
 
-There are no AI keys in code, configuration, or Secrets Manager. Locally, boto3 uses your AWS profile. In AWS it uses
-the ECS task role, which needs `bedrock:InvokeModelWithResponseStream` on the inference profile and on the underlying
-foundation models.
+Bedrock needs no AI key. Locally, boto3 uses your AWS profile. In AWS it uses the ECS task role, which needs
+`bedrock:InvokeModelWithResponseStream` on the inference profile and on the underlying foundation models.
+
+DeepInfra needs an API key in `DEEPINFRA_API_KEY`. In AWS it comes from a Secrets Manager secret whose value is set by
+hand, never through code or Terraform. The key is never logged.
 
 ## Logs
 
