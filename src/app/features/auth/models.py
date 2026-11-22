@@ -7,7 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.shared.db import Base
 
 # Bump when the privacy notice text changes; users who accepted an older version are asked again.
-PRIVACY_NOTICE_VERSION = "2026-11-20.3"
+PRIVACY_NOTICE_VERSION = "2026-11-22.1"
 
 
 class User(Base):
