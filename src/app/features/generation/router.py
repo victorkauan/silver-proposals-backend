@@ -42,8 +42,10 @@ def generate(
         proposal.briefing,
         get_settings().generation_max_tokens,
     )
+    user_id = user.id
+    session.close()
     return StreamingResponse(
-        stream_generation(provider, request, proposal_id, user.id),
+        stream_generation(provider, request, proposal_id, user_id),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
