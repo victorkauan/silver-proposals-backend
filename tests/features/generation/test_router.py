@@ -18,7 +18,7 @@ from app.shared.adapters.llm.base import (
 )
 from app.shared.adapters.llm.factory import get_llm_provider
 from app.shared.adapters.llm.fake import FAKE_PROPOSAL, FakeProvider
-from app.shared.db import get_session_factory
+from app.shared.db import get_engine, get_session_factory
 
 pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("database")]
 
@@ -38,6 +38,17 @@ class EmptyProvider:
 
     def stream(self, request: GenerationRequest) -> Iterator[StreamEvent]:
         yield TextDelta("   ")
+
+
+class PoolProbe:
+    model = "probe"
+
+    def __init__(self) -> None:
+        self.checked_out: int | None = None
+
+    def stream(self, request: GenerationRequest) -> Iterator[StreamEvent]:
+        self.checked_out = get_engine().pool.checkedout()  # type: ignore[attr-defined]
+        yield TextDelta("# Proposta")
 
 
 def events(body: str) -> list[tuple[str, dict[str, Any]]]:
@@ -152,3 +163,17 @@ def test_empty_output_is_a_failure(client: TestClient, make_user: MakeUser) -> N
     response = client.post(f"/proposals/{proposal_id}/generate", headers=owner.headers)
 
     assert events(response.text)[-1][1]["code"] == "generation_failed"
+
+
+def test_generation_holds_no_database_connection_while_streaming(
+    client: TestClient, make_user: MakeUser
+) -> None:
+    owner = make_user("owner")
+    proposal_id = create(client, owner)
+    probe = PoolProbe()
+    use(probe)
+
+    response = client.post(f"/proposals/{proposal_id}/generate", headers=owner.headers)
+
+    assert events(response.text)[-1][0] == "done"
+    assert probe.checked_out == 0
